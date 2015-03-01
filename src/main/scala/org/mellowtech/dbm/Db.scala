@@ -89,6 +89,7 @@ class FileDb(val name: String, val path: String) extends Db {
     case None => this
     case Some(t) => {
       tables = tables - table
+      t.close
       DelDir.d(path + "/" + table)
       this
     }
@@ -105,8 +106,13 @@ class FileDb(val name: String, val path: String) extends Db {
 
 object Db{
   import com.github.nscala_time.time.Imports._
+  import akka.actor.ActorSystem
   import java.util.Date
+  
   val TableHeaderFile = "header.mth"
+  
+  val system = ActorSystem("dbmsystem")
+  def shutdown = system.shutdown
   
   def openTable(th: TableHeader, p: String): Table[_] = th.keyType match{  
     case DbType.INT => Table[Int](th, p)

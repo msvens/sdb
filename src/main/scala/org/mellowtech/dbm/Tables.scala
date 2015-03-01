@@ -23,6 +23,13 @@ trait Table[K] {
   def +=(row: Row[K]): Table.this.type
   def -=(n: ColumnName, key: K): Table.this.type
   def -=(key: K): Table.this.type
+  def find[A](cn: ColumnName, v: A): Iterator[Row[K]] = columnHeader(cn) match {
+    case None => throw new Error("no such column")
+    case Some(ch) => for{
+      r <- rows
+        if(r.get(cn) != None && r(cn) == v)
+      } yield(r)
+  }
   def flush: Try[Unit]
   def close: Try[Unit]
   def size: Long = -1
@@ -103,6 +110,7 @@ trait Queryable {
 
 object Table {
   import scala.collection.immutable.TreeMap
+  import org.mellowtech.dbm.search.IndexingTable
   
   private def fill[K](items: Seq[(K,ColumnName,Any)])(t: Table[K]): Table[K] = items.foldLeft(t)((b,i) => b.+=(i._1, i._2, i._3))
   

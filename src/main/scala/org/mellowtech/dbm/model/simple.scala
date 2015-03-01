@@ -112,17 +112,7 @@ object simple {
       } 
     }
     
-    def find[A](v: A, cn: ColumnName): Iterator[R] = table columnHeader cn match{
-      case Some(ch) => {
-        if(ch.search != SearchType.NONE){
-          null
-        } else for { //slow search
-          r <- table.rows
-          if(r.get(cn) != None && r(cn) == v)
-        } yield(conv(r))
-      }
-      case None => throw new Error("No such column: "+cn)
-    }
+    def find[B](cn: ColumnName, v: B): Iterator[R] = for(r <- table.find(cn, v)) yield(conv(r))
     
     def ins(r: R)(implicit ord: Ordering[A]): Unit = {
       val m = noOption(mapify(r))

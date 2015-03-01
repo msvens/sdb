@@ -1,7 +1,11 @@
 /**
  *
  */
-package org.mellowtech.dbm
+package org.mellowtech.dbm.example
+
+import java.io.File
+
+  
 
 /**
  * @author msvens
@@ -9,7 +13,8 @@ package org.mellowtech.dbm
  */
 object SimpleExample extends App{
   import java.io.File
-  import model.simple._
+  import org.mellowtech.dbm.model.simple._
+  import org.mellowtech.dbm._
   
   val dir = new File("/Users/msvens/dbmtestsimple")
   
@@ -37,9 +42,10 @@ object SimpleExample extends App{
 
   //println(g.toString)
 
-  val s = t.find("one", "c2")
+  val s = t.find("c2", "one")
   
   println(s mkString "\n")
   db.flush
+  Db.shutdown
 
 }

@@ -1,7 +1,12 @@
 /**
  *
  */
-package org.mellowtech.dbm
+package org.mellowtech.dbm.example
+
+import java.io.File
+import org.mellowtech.dbm._
+import scala.util.{Try, Failure,Success}
+
 
 /**
  * @author msvens
@@ -9,11 +14,8 @@ package org.mellowtech.dbm
  */
 object SearchExample extends App{
   import java.io.File
-  import scala.util.{Try,Success,Failure}
-  import SearchType._
-  
-  val tt = (1,"hej")
-  case class TT(i: Int, s: String)
+  import org.mellowtech.dbm.SearchType._
+ 
   
   
   val dir = new File("/Users/msvens/dbmtest")
@@ -61,8 +63,7 @@ object SearchExample extends App{
   }
   
   db -= t.name
-  
   db.close
-  DbIndexer.shutdown
+  Db.shutdown
 
 }

@@ -1,19 +1,23 @@
 /**
  *
  */
-package org.mellowtech.dbm
+package org.mellowtech.dbm.search
 
-import org.apache.lucene.search.SortField
+
+import akka.actor.ActorSystem
+import java.io.File
 import org.apache.lucene.document._
-import org.apache.lucene.index.IndexableField
-import org.apache.lucene.index.Term
-import org.apache.lucene.search.NumericRangeQuery
-import org.apache.lucene.search.Query
-import org.apache.lucene.search.TermQuery
-import org.apache.lucene.search.BooleanClause
-  
-import SearchType._
-import DbType._
+import org.apache.lucene.index._
+import org.apache.lucene.analysis.standard.StandardAnalyzer
+import org.apache.lucene.queryparser.classic.QueryParser
+import org.apache.lucene.search._
+import org.apache.lucene.store.{RAMDirectory, FSDirectory}
+import org.apache.lucene.util.Version
+import org.mellowtech.dbm._
+import org.mellowtech.dbm.DbType._
+import org.mellowtech.dbm.SearchType._
+
+import scala.util.Try
 
 class IndexingTable[K](var t: Table[K]) extends Table[K] with TableSearcher[K] {
   import scala.util.Try
@@ -54,6 +58,14 @@ class IndexingTable[K](var t: Table[K]) extends Table[K] with TableSearcher[K] {
   } yield t.close
   
   override def size: Long = t.size
+  
+  override def find[A](cn: String, v: A): Iterator[Row[K]] = this.columnHeader(cn) match {
+    case None => throw new Error("no such column")
+    case Some(ch) => ch.search match {
+      case SearchType.NONE => super.find(cn,v)
+      case _ => toRows(queryKeys(cn, v, Seq.empty))
+    }
+  }
 }
 
 trait TableSearcher[K] { that: Table[K] =>
@@ -71,17 +83,17 @@ trait TableSearcher[K] { that: Table[K] =>
     this
   }
   
-  def queryKeys[A](cn: String, q: String, sortBy: Seq[ColumnName]): Seq[K] = this.columnHeader(cn) match {
-    case Some(ch) => dbi.rows(RowQuery[A](ch, q, dbi.parser), toHeader(sortBy))
+  def queryKeys[A](cn: String, q: A, sortBy: Seq[ColumnName] = Seq.empty): Iterator[K] = this.columnHeader(cn) match {
+    case Some(ch) => dbi.rows(RowQuery(ch, q, dbi.parser), toHeader(sortBy))
     case None => throw new Error("no such column")
   }
   
-  def queryKeys(q: Query, sortBy: Seq[ColumnName]): Seq[K] = dbi.rows(q, toHeader(sortBy))
-  def queryKeys(q: String, sortBy: Seq[ColumnName]): Seq[K] = dbi.rows(q, toHeader(sortBy))
-  def queryKeys[A](q: RowQuery[A], sortBy: Seq[ColumnName]): Seq[K] = dbi.rows(q, toHeader(sortBy))
-  def queryKeys(q: Seq[RowQuery[_]], sortBy: Seq[ColumnName]): Seq[K] = dbi.rows(q, toHeader(sortBy))
+  def queryKeys(q: Query, sortBy: Seq[ColumnName]): Iterator[K] = dbi.rows(q, toHeader(sortBy))
+  def queryKeys(q: String, sortBy: Seq[ColumnName]): Iterator[K] = dbi.rows(q, toHeader(sortBy))
+  def queryKeys(q: RowQuery, sortBy: Seq[ColumnName]): Iterator[K] = dbi.rows(q, toHeader(sortBy))
+  def queryKeys(q: Seq[RowQuery], sortBy: Seq[ColumnName]): Iterator[K] = dbi.rows(q, toHeader(sortBy))
   
-  def toRows(keys: Seq[K]): Seq[Row[K]] = for(k <- keys) yield row(k)
+  def toRows(keys: Iterator[K]): Iterator[Row[K]] = for(k <- keys.toIterator) yield row(k)
   
   def refresh: Unit = dbi.refresh
   
@@ -114,7 +126,7 @@ object DbDocument {
   def toQuery[A](row: Row[A]): Query = toQuery(row.key)
 }
 
-class RowQuery[V](val query: Query, val occur: BooleanClause.Occur) {
+class RowQuery(val query: Query, val occur: BooleanClause.Occur) {
   
   //def query: Query = Converter.toQuery(column, value)
   
@@ -122,9 +134,9 @@ class RowQuery[V](val query: Query, val occur: BooleanClause.Occur) {
 
 object RowQuery {
   import org.apache.lucene.queryparser.classic.QueryParser;
-  def apply[V](col: String, q: String, occur: BooleanClause.Occur = BooleanClause.Occur.MUST) = 
-    new RowQuery[V](Converter.toQuery(col, q), occur)
-  def apply[V](ch: ColumnHeader, q: String, p: QueryParser) = ch.search match {
+  def apply[V](col: String, q: V, occur: BooleanClause.Occur = BooleanClause.Occur.MUST) = 
+    new RowQuery(Converter.toQuery(col, q), occur)
+  def apply[V](ch: ColumnHeader, q: V, p: QueryParser) = ch.search match {
     case SearchType.TEXT => p.parse(ch.name+":"+q)
     case _ => Converter.toQuery(ch.name, q)
   }
@@ -170,7 +182,7 @@ class DbIndexer[K](th: TableHeader, path: Option[String])(implicit t: Table[K]) 
     case _ => DbIndexer.NUMERIC_KEY
   }
   
-  private val refreshActor = DbIndexer.system.actorOf(SearchRefresh.props(500,500,this))
+  private val refreshActor = Db.system.actorOf(SearchRefresh.props(500,500,this))
   
   def refresh: Try[Unit] = Try(searchManager.maybeRefresh)
   
@@ -200,31 +212,31 @@ class DbIndexer[K](th: TableHeader, path: Option[String])(implicit t: Table[K]) 
       d.asInstanceOf[K]
     }
   
-  def rows(q: Query): Seq[K] = {
+  def rows(q: Query): Iterator[K] = {
     //Yes
     searchManager.maybeRefresh
     val is = searchManager.acquire
     val td = is.search(q, Int.MaxValue)
     println("td: "+td.scoreDocs.length+" query: "+q)
     try{
-      if(td.scoreDocs == null) List.empty else for {
-          sd <- td.scoreDocs
+      if(td.scoreDocs == null) Iterator.empty else for {
+          sd <- td.scoreDocs.toIterator
         } yield key(sd, is)
         
     } finally searchManager.release(is)
   }
   
-  def rows(column: String, value: String): Seq[K] = rows(new TermQuery( new Term(column,value)))
+  def rows(column: String, value: String): Iterator[K] = rows(new TermQuery( new Term(column,value)))
   
   def flush: Try[Unit] = Try(indexWriter.commit)
   
   def close: Try[Unit] = {
-    DbIndexer.system.stop(refreshActor)
+    Db.system.stop(refreshActor)
     for {
       iw <- Try(indexWriter.close)
     } yield searchManager.close
   }
-  def rows(q: Query, sortBy: Seq[ColumnHeader]): Seq[K] = {
+  def rows(q: Query, sortBy: Seq[ColumnHeader]): Iterator[K] = {
     if(sortBy.isEmpty) 
       rows(q) 
     else {
@@ -238,16 +250,16 @@ class DbIndexer[K](th: TableHeader, path: Option[String])(implicit t: Table[K]) 
       val is = searchManager.acquire
       val td = is.search(q, Int.MaxValue, s)
       try{
-        if(td.scoreDocs == null) List.empty else for {
-            sd <- td.scoreDocs
+        if(td.scoreDocs == null) Iterator.empty else for {
+            sd <- td.scoreDocs.toIterator
           } yield key(sd, is)   
       } finally searchManager.release(is)
     }
   }
   
-  def rows(q: String, sortBy: Seq[ColumnHeader]): Seq[K] = rows(parser.parse(q), sortBy)
-  def rows[A](q: RowQuery[A], sortBy: Seq[ColumnHeader]): Seq[K] = rows(q.query, sortBy)
-  def rows(q: Seq[RowQuery[_]], sortBy: Seq[ColumnHeader]): Seq[K] = {
+  def rows(q: String, sortBy: Seq[ColumnHeader]): Iterator[K] = rows(parser.parse(q), sortBy)
+  def rows(q: RowQuery, sortBy: Seq[ColumnHeader]): Iterator[K] = rows(q.query, sortBy)
+  def rows(q: Seq[RowQuery], sortBy: Seq[ColumnHeader]): Iterator[K] = {
      val qq = q.foldLeft(new BooleanQuery)((a,b)=>{a.add(b.query,b.occur);a})
      rows(qq, sortBy)
   }
@@ -256,15 +268,10 @@ class DbIndexer[K](th: TableHeader, path: Option[String])(implicit t: Table[K]) 
 }
 
 object DbIndexer {
-  import akka.actor.ActorSystem
   
   val BINARY_KEY = 1
   val NUMERIC_KEY = 2
   val TEXT_KEY = 3
-  
-  val system = ActorSystem("dbmsystem")
-  
-  def shutdown = system.shutdown
   
   def apply[K](th: TableHeader, path: Option[String])(implicit t: Table[K]) = {
     new DbIndexer(th,path)

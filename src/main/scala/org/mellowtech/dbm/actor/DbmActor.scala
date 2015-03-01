@@ -3,7 +3,7 @@ package org.mellowtech.dbm.actor
 import akka.actor.Actor
 import akka.actor._
 import scala.concurrent.duration._
-import org.mellowtech.dbm.DbIndexer
+import org.mellowtech.dbm.search.DbIndexer
 
 case object ScheduleRefresh
 case class NewDelay(delay: Int)
