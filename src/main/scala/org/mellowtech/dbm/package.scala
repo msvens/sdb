@@ -4,20 +4,19 @@
 package org.mellowtech
 import com.github.nscala_time.time.Imports._
 import java.util.Date
-import com.mellowtech.core.collections.mappings._
+import org.mellowtech.core.bytestorable._
 /**
  * @author msvens
  *
  */
 package object dbm {
   import scala.reflect._
-  import com.mellowtech.core.bytestorable._
+  
 
   object bcConversions {
-    implicit def IntToBC(i: Int) = (new CBInt(i)).asInstanceOf[ByteComparable[Int]]
-    implicit def CBIntToInt(cbi: CBInt) = cbi.get
+   
 
-    implicit def tToBC[T](v: T): ByteComparable[T] = {
+    implicit def tToBC[T](v: T): BComparable[T,_] = {
       if(v == null) null
       else {
       val m = v match {
@@ -34,53 +33,9 @@ package object dbm {
         case x: Array[Byte] => new CBByteArray(x)
         case _              => throw new ClassCastException
       }
-      m.asInstanceOf[ByteComparable[T]]
+      m.asInstanceOf[BComparable[T,_]]
       }
     }
-    implicit def bcToT[T](bc: ByteStorable[T]): T = {
-      if(bc == null)
-        null.asInstanceOf[T]
-      else
-        bc.get
-      /*bc match {
-        case x: ByteComparable[Int] => x.get
-        case x: 
-        case _ => throw new ClassNotFoundException*/
-      //}
-     
-      /*val m = v match {
-        case x: Int         => new CBInt(x)
-        case x: String      => new CBString(x)
-        case x: Byte        => new CBByte(x)
-        case x: Char        => new CBChar(x)
-        case x: Short       => new CBShort(x)
-        case x: Long        => new CBLong(x)
-        case x: Float       => new CBFloat(x)
-        case x: Double      => new CBDouble(x)
-        case x: DateTime    => new CBDate(x.toDate)
-        case x: Date        => new CBDate(x)
-        case x: Array[Byte] => new CBByteArray(x)
-        case _              => throw new ClassCastException
-      }
-      m.asInstanceOf[ByteComparable[T]]*/
-    }
-    /*implicit def tToBS[T](v: T): ByteStorable[T] = {
-      val m = v match {
-        case x: Int         => new CBInt(x)
-        case x: String      => new CBString(x)
-        case x: Byte        => new CBByte(x)
-        case x: Char        => new CBChar(x)
-        case x: Short       => new CBShort(x)
-        case x: Long        => new CBLong(x)
-        case x: Float       => new CBFloat(x)
-        case x: Double      => new CBDouble(x)
-        case x: DateTime    => new CBDate(x.toDate)
-        case x: Date        => new CBDate(x)
-        case x: Array[Byte] => new CBByteArray(x)
-        case _              => throw new ClassCastException
-      }
-      m.asInstanceOf[ByteStorable[T]]
-    }*/
 
   }
 
@@ -113,53 +68,54 @@ package object dbm {
   val DateTag = classTag[Date]
   val BATag = classTag[Array[Byte]]
 
-  def bcmap[T: ClassTag]: BCMapping[T] = {
+  def bcmap[T: ClassTag]: BComparable[T,_] = {
     val m = classTag[T] match {
-      case ITag    => new IntegerMapping
-      case BTag    => new ByteMapping
-      case StrTag  => new StringMapping
-      case CTag    => new CharacterMapping
-      case STag    => new ShortMapping
-      case LTag    => new LongMapping
-      case FTag    => new FloatMapping
-      case DTag    => new DoubleMapping
-      case DateTag => new DateMapping
-      case BATag   => new ByteArrayMapping
+      case ITag    => new CBInt
+      case BTag    => new CBByte
+      case StrTag  => new CBString
+      case CTag    => new CBChar
+      case STag    => new CBShort
+      case LTag    => new CBLong
+      case FTag    => new CBFloat
+      case DTag    => new CBDouble
+      case DateTag => new CBDate
+      case BATag   => new CBByteArray
       case _       => throw new ClassCastException
     }
-    m.asInstanceOf[BCMapping[T]]
+    m.asInstanceOf[BComparable[T,_]]
   }
 
-  def bcmap[T](v: T): BCMapping[T] = {
+  def bcmap[T](v: T): BComparable[T,_] = {
     val m = v match {
-      case x: Int         => new IntegerMapping
-      case x: String      => new StringMapping
-      case x: Byte        => new ByteMapping
-      case x: Char        => new CharacterMapping
-      case x: Short       => new ShortMapping
-      case x: Long        => new LongMapping
-      case x: Float       => new FloatMapping
-      case x: Double      => new DoubleMapping
-      case x: DateTime    => new DateMapping
-      case x: Date        => new DateMapping
-      case x: Array[Byte] => new ByteArrayMapping
+      case x: Int         => new CBInt
+      case x: String      => new CBString
+      case x: Byte        => new CBByte
+      case x: Char        => new CBChar
+      case x: Short       => new CBShort
+      case x: Long        => new CBLong
+      case x: Float       => new CBFloat
+      case x: Double      => new CBDouble
+      case x: DateTime    => new CBDate
+      case x: Date        => new CBDate
+      case x: Array[Byte] => new CBByteArray
       case _              => throw new ClassCastException
     }
-    m.asInstanceOf[BCMapping[T]]
+    m.asInstanceOf[BComparable[T,_]]
   }
   
-  def bcmap[T](dbType: DbType.DbType): BCMapping[T] = (dbType match{
-    case DbType.INT => new IntegerMapping
-    case DbType.STRING => new StringMapping
-    case DbType.BYTE => new ByteMapping
-    case DbType.CHAR => new CharacterMapping
-    case DbType.SHORT => new ShortMapping
-    case DbType.LONG => new LongMapping
-    case DbType.FLOAT => new FloatMapping
-    case DbType.DOUBLE => new DoubleMapping
-    case DbType.DATE => new DateMapping
-    case DbType.BYTES => new ByteArrayMapping
-  }).asInstanceOf[BCMapping[T]]
+  
+    def bctype[A, B <: BComparable[A,B]](dbType: DbType.DbType): Class[B] = (dbType match{
+      case DbType.INT => classOf[CBInt]
+      case DbType.STRING => classOf[CBString]
+      case DbType.BYTE => classOf[CBByte]
+      case DbType.CHAR => classOf[CBChar]
+      case DbType.SHORT => classOf[CBShort]
+      case DbType.LONG => classOf[CBLong]
+      case DbType.FLOAT => classOf[CBFloat]
+      case DbType.DOUBLE => classOf[CBDouble]
+      case DbType.DATE => classOf[CBDate]
+      case DbType.BYTES => classOf[CBByteArray]
+  }).asInstanceOf[Class[B]]
   
   /*
   def dbOrdering(dbType: DbType.DbType) = dbType match {
@@ -179,6 +135,8 @@ package object dbm {
       case BATag   => DbType.BYTES
       case _       => throw new ClassCastException
     }
+  
+  
 
   def dbType[T](v: T): DbType.DbType = v match {
     case x: Int         => DbType.INT

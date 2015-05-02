@@ -48,7 +48,7 @@ trait Row[K] {
 object Row {
   import java.io.ByteArrayOutputStream
   import java.nio.ByteBuffer
-  import com.mellowtech.core.bytestorable.{CBInt, PrimitiveObject, PrimitiveIndexedObject, CBString}
+  import org.mellowtech.core.bytestorable.{CBInt, PrimitiveObject, PrimitiveIndexedObject, CBString}
   
   def apply[K](key: K)(implicit ord: Ordering[K]) = new SparseRow(key, TreeMap[String,Any]())
   
@@ -63,23 +63,23 @@ object Row {
   
   def toBytes[K](row: Row[K]): Array[Byte] = {
      val bos = new ByteArrayOutputStream
-     (new CBInt(row.size)).toBytes(bos)
-     row.iterator foreach { case (c,v) => {(new CBString(c)).toBytes(bos);(new PrimitiveObject(v)).toBytes(bos)}}
+     (new CBInt(row.size)).to(bos)
+     row.iterator foreach { case (c,v) => {(new CBString(c)).to(bos);(new PrimitiveObject(v)).to(bos)}}
      bos.toByteArray
   }
   
   def toBytes[K](row: Row[K], t: IndexTable[K]): Array[Byte] = {
     val bos = new ByteArrayOutputStream
-    (new CBInt(row.size)).toBytes(bos)
+    (new CBInt(row.size)).to(bos)
     for (i <- row.toList){
-      new PrimitiveIndexedObject(i._2, t.columnIndex(i._1)).toBytes(bos)
+      new PrimitiveIndexedObject(i._2, t.columnIndex(i._1)).to(bos)
     }
     bos.toByteArray
   }
   
   def apply[K](key: K, th: TableHeader, b: Array[Byte], t: IndexTable[K])(implicit ord: Ordering[K]): Row[K] = {
     val bb = ByteBuffer.wrap(b)
-    val size = (new CBInt).fromBytes(bb).get
+    val size = (new CBInt).from(bb).value
     val pio = new PrimitiveIndexedObject
     
     null
@@ -87,11 +87,11 @@ object Row {
   
   def apply[K](key: K, th: TableHeader, b: Array[Byte])(implicit ord: Ordering[K]): Row[K] = {
     val bb = ByteBuffer.wrap(b)
-    val size = (new CBInt).fromBytes(bb).get
+    val size = (new CBInt).from(bb).value
     val po = new PrimitiveObject[Any]
     val cv = for {
       i <- 0 until size
-    } yield ((new CBString()).fromBytes(bb).get,po.fromBytes(bb).get)
+    } yield ((new CBString()).from(bb).get,po.from(bb).get)
     val m = th.sorted match {
       case true => TreeMap[String,Any]() ++ cv
       case false => Map[String,Any]() ++ cv

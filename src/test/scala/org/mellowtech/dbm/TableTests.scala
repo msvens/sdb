@@ -94,11 +94,12 @@ class DiscTableSpec extends FlatSpec with TableBuffer{
   
   it should "be able to be reopened" in {
     addValues
-    dbuffer.foreach(_.flush)
+    //dbuffer.foreach(t => assert(t.size === 2))
+    dbuffer.foreach(_.close)
     val t1 = Table[Int](rhead, rdir)
     val t2 = Table[Int](chead, cdir)
-    assert(t1.size === 2)
-    assert(t2.size === 2)
+    assert(t1.column("col2").size === 2)
+    assert(t2.column("col2").size === 2)
   }
   
   it should "save the correct data to disc" in {
@@ -107,6 +108,7 @@ class DiscTableSpec extends FlatSpec with TableBuffer{
     val t1 = Table[Int](rhead, rdir)
     val t2 = Table[Int](chead, cdir)
     val r1 = t1.row(1)
+    
     val r2 = t2.row(2)
     assert(r1[Int]("col2") === 2000)
     assert(r2[Int]("col2") === 2000)

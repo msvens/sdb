@@ -1,7 +1,7 @@
 package org.mellowtech.dbm
 
 
-import com.mellowtech.core.util.DelDir
+import org.mellowtech.core.util.DelDir
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure

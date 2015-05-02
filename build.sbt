@@ -1,6 +1,6 @@
 name := """dbm"""
 
-scalaVersion := "2.11.4"
+scalaVersion := "2.11.5"
 
 version := "1.0-SNAPSHOT"
 
@@ -21,7 +21,7 @@ libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "1.4.0"
 
 libraryDependencies += "junit" % "junit" % "4.11" % "test"
 
-libraryDependencies += "org.mellowtech" % "core" % "2.0.2-SNAPSHOT"
+libraryDependencies += "org.mellowtech" % "core" % "3.0-SNAPSHOT"
 
 //lucene
 libraryDependencies ++= Seq(

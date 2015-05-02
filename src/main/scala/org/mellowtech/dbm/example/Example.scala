@@ -51,5 +51,7 @@ object Example extends App{
   println(t2.size)
   
   db.flush
+  
+  System.exit(0)
 
 }

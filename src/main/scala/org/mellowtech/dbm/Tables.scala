@@ -1,5 +1,7 @@
 package org.mellowtech.dbm
 import scala.util.{Try,Success,Failure}
+import org.mellowtech.core.bytestorable.BComparable
+import org.mellowtech.core.bytestorable.BStorable
 
 trait Table[K] {
   
@@ -74,7 +76,6 @@ trait FileTable[K] {this: Table[K] =>
   
   def colPath(ch: ColumnHeader): String = {
     val p = new File(path.get+"/"+ch.name+"/data").getAbsolutePath
-    println("colpath: "+p)
     p
   }
   
@@ -100,7 +101,7 @@ trait FileTable[K] {this: Table[K] =>
     
   def openCols(headers: Iterable[ColumnHeader])(implicit ord: Ordering[K]): Iterable[(ColumnName,Column[K,Any])] = for {
       ch <- headers
-      d = new File(path.get + "/" + ch.name + "/data.idx")
+      d = new File(path.get + "/" + ch.name + "/data")
     } yield((ch.name,Column[K,Any](ch, d.getAbsolutePath)))
 }
 
@@ -139,7 +140,7 @@ object Table {
   
   def apply[K](th: TableHeader, columns: Seq[ColumnHeader], path: String, items: (K,ColumnName,Any)*)(implicit ord: Ordering[K]): Table[K] = 
     fill(items) {
-      val m = {for(i <- columns; ii = i.copy(sorted = th.sorted)) yield(ii.name, ii)}.toMap
+      val m = {for(i <- columns; ii = i.copy(sorted = th.sorted, keyType = th.keyType)) yield(ii.name, ii)}.toMap
       val op = Option(path)
       th.tableType match {
         case TableType.MEMORY_COLUMN => new MemColTable(th,m.mapValues(Column[K,Any](_)))

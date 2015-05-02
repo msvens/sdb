@@ -5,8 +5,8 @@ import org.scalatest._
 import java.io.File
 
 object Files {
-  import com.mellowtech.core.util.Platform
-  import com.mellowtech.core.util.DelDir
+  import org.mellowtech.core.util.Platform
+  import org.mellowtech.core.util.DelDir
   import java.net.URL
   
   def temp(dir: String): String = new File(Platform.getTempDir+"/"+dir).getAbsolutePath
