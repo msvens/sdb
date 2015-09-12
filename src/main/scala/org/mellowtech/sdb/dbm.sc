@@ -1,4 +1,4 @@
-package org.mellowtech.dbm
+package org.mellowtech.sdb
 
 object dbm {
   println("Welcome to the Scala worksheet")       //> Welcome to the Scala worksheet

@@ -1,7 +1,7 @@
 /**
  *
  */
-package org.mellowtech.dbm.example
+package org.mellowtech.sdb.example
 
 import java.io.File
 
@@ -13,14 +13,14 @@ import java.io.File
  */
 object SimpleExample extends App{
   import java.io.File
-  import org.mellowtech.dbm.model.simple._
-  import org.mellowtech.dbm._
+  import org.mellowtech.sdb.model.simple._
+  import org.mellowtech.sdb._
   
   val dir = new File("/Users/msvens/dbmtestsimple")
   
   if(!dir.exists) dir.mkdir()
   
-  implicit val db = Db("xample",dir.getAbsolutePath)
+  implicit val db = Db("sample",dir.getAbsolutePath)
   
   
   case class MyRow(id: Option[Int], c2: Option[String])

@@ -9,7 +9,7 @@ import org.mellowtech.core.bytestorable._
  * @author msvens
  *
  */
-package object dbm {
+package object sdb {
   import scala.reflect._
   
 

@@ -1,7 +1,7 @@
 /**
  *
  */
-package org.mellowtech.dbm
+package org.mellowtech.sdb
 
 import scala.collection.JavaConversions._
 import java.util.{Map => JMap}

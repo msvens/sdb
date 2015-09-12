@@ -1,4 +1,4 @@
-package org.mellowtech.dbm.model
+package org.mellowtech.sdb.model
 
 /**
  * @author msvens
@@ -29,8 +29,8 @@ trait COptions {
 }
 
 object simple {
-  import org.mellowtech.dbm._
-  import org.mellowtech.dbm.DbType._
+  import org.mellowtech.sdb._
+  import org.mellowtech.sdb.DbType._
   import scala.reflect.ClassTag
   
   def mapify[T: Mappable](t: T) = implicitly[Mappable[T]].toMap(t)

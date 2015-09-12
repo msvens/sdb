@@ -1,7 +1,7 @@
 /**
  *
  */
-package org.mellowtech.dbm
+package org.mellowtech.sdb
 
 /**
  * @author msvens

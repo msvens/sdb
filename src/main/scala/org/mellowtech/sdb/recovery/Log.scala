@@ -1,4 +1,4 @@
-package org.mellowtech.dbm.recovery
+package org.mellowtech.sdb.recovery
 
 import java.io.File
 import java.nio.channels.{FileChannel, WritableByteChannel, ReadableByteChannel}
@@ -6,7 +6,7 @@ import java.nio.file.StandardOpenOption
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.mellowtech.core.bytestorable.CBByteArray
-import org.mellowtech.dbm.{Row,Table,FileTable}
+import org.mellowtech.sdb.{Row,Table,FileTable}
 
 /**
  * @author msvens

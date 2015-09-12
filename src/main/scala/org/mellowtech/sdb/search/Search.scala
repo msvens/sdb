@@ -1,7 +1,7 @@
 /**
  *
  */
-package org.mellowtech.dbm.search
+package org.mellowtech.sdb.search
 
 
 import akka.actor.ActorSystem
@@ -13,9 +13,9 @@ import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search._
 import org.apache.lucene.store.{RAMDirectory, FSDirectory}
 import org.apache.lucene.util.Version
-import org.mellowtech.dbm._
-import org.mellowtech.dbm.DbType._
-import org.mellowtech.dbm.SearchType._
+import org.mellowtech.sdb._
+import org.mellowtech.sdb.DbType._
+import org.mellowtech.sdb.SearchType._
 
 import scala.util.Try
 
@@ -153,7 +153,7 @@ class DbIndexer[K](th: TableHeader, path: Option[String])(implicit t: Table[K]) 
   import org.apache.lucene.index.{IndexWriter,IndexWriterConfig,Term}
   import org.apache.lucene.search._
   import org.apache.lucene.queryparser.classic.QueryParser;
-  import org.mellowtech.dbm.actor._
+  import org.mellowtech.sdb.actor._
   
   val d = path match {
     case Some(p) => {

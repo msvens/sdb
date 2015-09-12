@@ -1,8 +1,9 @@
-name := """dbm"""
+name := """sdb"""
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.7"
 
-version := "1.0-SNAPSHOT"
+version := "0.1-SNAPSHOT"
+organization := "org.mellowtech"
 
 resolvers ++= Seq(
   "Mellowtech Snapshots" at "http://www.mellowtech.org/nexus/content/groups/public"
@@ -21,7 +22,7 @@ libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "1.4.0"
 
 libraryDependencies += "junit" % "junit" % "4.11" % "test"
 
-libraryDependencies += "org.mellowtech" % "core" % "3.0-SNAPSHOT"
+libraryDependencies += "org.mellowtech" % "core" % "3.0.1"
 
 //lucene
 libraryDependencies ++= Seq(

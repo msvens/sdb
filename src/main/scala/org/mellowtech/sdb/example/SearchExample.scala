@@ -1,10 +1,10 @@
 /**
  *
  */
-package org.mellowtech.dbm.example
+package org.mellowtech.sdb.example
 
 import java.io.File
-import org.mellowtech.dbm._
+import org.mellowtech.sdb._
 import scala.util.{Try, Failure,Success}
 
 
@@ -14,7 +14,7 @@ import scala.util.{Try, Failure,Success}
  */
 object SearchExample extends App{
   import java.io.File
-  import org.mellowtech.dbm.SearchType._
+  import org.mellowtech.sdb.SearchType._
  
   
   

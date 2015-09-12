@@ -1,4 +1,4 @@
-package org.mellowtech.dbm
+package org.mellowtech.sdb
 import scala.util.{Try,Success,Failure}
 import org.mellowtech.core.bytestorable.BComparable
 import org.mellowtech.core.bytestorable.BStorable
@@ -111,7 +111,7 @@ trait Queryable {
 
 object Table {
   import scala.collection.immutable.TreeMap
-  import org.mellowtech.dbm.search.IndexingTable
+  import org.mellowtech.sdb.search.IndexingTable
   
   private def fill[K](items: Seq[(K,ColumnName,Any)])(t: Table[K]): Table[K] = items.foldLeft(t)((b,i) => b.+=(i._1, i._2, i._3))
   

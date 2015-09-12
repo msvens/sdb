@@ -1,4 +1,4 @@
-package org.mellowtech.dbm
+package org.mellowtech.sdb
 
 
 import scala.language.experimental.macros
