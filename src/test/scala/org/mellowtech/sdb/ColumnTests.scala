@@ -61,13 +61,13 @@ trait Columns extends SuiteMixin { this: Suite =>
   val ch = ColumnHeader("col1", "table1")
   val dir = "dbmtest"
   val f = "discBasedMap";
-  val cols: ArrayBuffer[Column[String,String]] = ArrayBuffer()
+  val cols: ArrayBuffer[SColumn[String,String]] = ArrayBuffer()
   
   abstract override def withFixture(test: NoArgTest) = {
-    cols += Column[String,String](ch)
+    cols += SColumn[String,String](ch)
     val tdir = Files.temp(dir+""+Random.alphanumeric.take(10).mkString(""))
     Files.create(tdir)
-    cols += Column[String,String](ch,tdir+"/"+f)
+    cols += SColumn[String,String](ch,tdir+"/"+f)
     try super.withFixture(test) // To be stackable, must call super.withFixture
     finally {
       cols.clear
@@ -115,7 +115,7 @@ class ColumnSpec extends FlatSpec with Columns{
     cols.foreach{c =>
       val c1 = c + ("key3", "val3")
       val value = for {
-        (k,v) <- c1.toIterator
+        (k,v) <- c1.iterator
         if(v.equals("val3"))
       } yield v
       assert(value.toList.head === "val3")

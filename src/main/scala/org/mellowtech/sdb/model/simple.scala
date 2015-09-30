@@ -49,21 +49,29 @@ object simple {
   }
   
   case class SimpleColumn[A](h: ColumnHeader)
+
   
-  abstract class SimpleTable[A : ClassTag,R: Mappable](val name: String)(implicit val db: Db) {
+  
+  
+  abstract class SimpleTable[A: Ordering,R: Mappable](val name: String)(implicit val db: Db, ct: ClassTag[A]) {
     
-    import Mappable._
-    import scala.util
+    //import Mappable._
+    //import scala.util
     
     val ktype = dbType[A]
     var thead = TableHeader(name, ktype)
     var searchable = false
     
     def O = new AnyRef with COptions
+
+    def primaryColumn[B: ClassTag](name: String, options: COption[B]*) = {
+      column(name, (COption.Primary +: options):_*)
+    }
     
     def column[B : ClassTag](name: String, options: COption[B]*): SimpleColumn[B] = {
       val vtype = dbType[B]
-      val h = options.foldLeft(ColumnHeader(name, this.name, vtype, ktype))((a,b) => {
+      val oset = options.toSet
+      val h = oset.foldLeft(ColumnHeader(name, this.name, ktype, vtype))((a,b) => {
         b match {
           case COption.Sorted => a.copy(sorted = true)
           case COption.Primary => {thead = thead.copy(primColumn = Some(name)); a}
@@ -75,8 +83,12 @@ object simple {
           case _ => a
         }
       })
+      if(oset(COption.Primary) && oset(COption.Nullable)){
+        thead = thead.copy(genKey = true)
+      }
       SimpleColumn(h)
     }
+    
     
     def * : Seq[SimpleColumn[_]]
     
@@ -84,29 +96,29 @@ object simple {
     
     def idc: SimpleColumn[A]
     
-    lazy val table: Table[A] = {
+    lazy val table: STable[A] = {
       val t = db.get[A](name) match {
         case Some(t) => t
         case None => {
           db.+=[A](thead)
           val t = db[A](name)
-          for(c <- headers) t.addCol(c)
+          for(c <- headers) t.addColumn(c)
           t
         }
       }
-      if(searchable) Table.searchable(t) else t
+      if(searchable) STable.searchable(t) else t
     }
     
-    private def conv(r: Row[A]): R = {
-      val p: (String,Any) = cTt((idc.h, r.key))
-      val t = addOption(r.iterator.toMap) + p
+    private def conv(r: KeyRow[A]): R = {
+      val p: (String,Any) = cTt((idc.h, r._1))
+      val t = addOption(r._2.iterator.toMap) + p
       materialize[R](t.withDefaultValue(None))
     }
     
-    def get(id: A): Option[R] = table rowIf id match {
+    def get(id: A): Option[R] = table row id match {
       case None => None
       case Some(r) => {
-        val p: (String,Any) = cTt((idc.h, r.key))
+        val p: (String,Any) = cTt((idc.h, id))
         val t = addOption(r.iterator.toMap) + p
         Some(materialize[R](t.withDefaultValue(None))) 
       } 
@@ -114,18 +126,20 @@ object simple {
     
     def find[B](cn: ColumnName, v: B): Iterator[R] = for(r <- table.find(cn, v)) yield(conv(r))
     
-    def ins(r: R)(implicit ord: Ordering[A]): Unit = {
+    def ins(r: R): Unit = {
       val m = noOption(mapify(r))
-      println(m)
-      val k: A = noOp(m(idc.h.name)).asInstanceOf[A]
-      val row = Row(k, m - idc.h.name)
-      table.+=(row)
+      //println(m)
+      //val k: A = noOp(m(idc.h.name)).asInstanceOf[A]
+      val k: Option[A] = noOp(m(idc.h.name))
+      val row = SRow(m - idc.h.name)
+      //println(row)
+      table + ((k,row))
     }
     
-    private def noOp[A](a: Any): Any = a match {
-      case Some(b) => b
-      case None => null
-      case _ => a
+    private def noOp[A](a: Any): Option[A] = a match {
+      case Some(b) => Some(b.asInstanceOf[A])
+      case None => None
+      case _ => Some(a.asInstanceOf[A])
     }
     
     

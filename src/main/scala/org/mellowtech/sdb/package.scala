@@ -5,6 +5,9 @@ package org.mellowtech
 import com.github.nscala_time.time.Imports._
 import java.util.Date
 import org.mellowtech.core.bytestorable._
+
+import scala.util.Try
+
 /**
  * @author msvens
  *
@@ -41,6 +44,9 @@ package object sdb {
 
   type ColumnName = String
   
+  type OptKeyRow[A] = (Option[A],SRow)
+  type KeyRow[A] = (A, SRow)
+  
   object SearchType extends Enumeration {
     type SearchType = Value
     val FIELD, TEXT, NONE = Value
@@ -48,7 +54,7 @@ package object sdb {
 
   object DbType extends Enumeration {
     type DbType = Value
-    val BYTE, SHORT, CHAR, INT, LONG, FLOAT, DOUBLE, STRING, DATE, BYTES = Value
+    val BYTE, BOOLEAN, SHORT, CHAR, INT, LONG, FLOAT, DOUBLE, STRING, DATE, BYTES = Value
   }
 
   object TableType extends Enumeration {
@@ -220,6 +226,11 @@ package object sdb {
       case _           => throw new ClassCastException
     }
     c.asInstanceOf[V]
+  }
+
+  trait Closable {
+    def flush: Try[Unit]
+    def close: Try[Unit]
   }
 
 }

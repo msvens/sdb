@@ -6,7 +6,7 @@ import java.nio.file.StandardOpenOption
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.mellowtech.core.bytestorable.CBByteArray
-import org.mellowtech.sdb.{Row,Table,FileTable}
+import org.mellowtech.sdb.{SRow,STable,FileTable}
 
 /**
  * @author msvens
@@ -71,8 +71,8 @@ object Log {
       }
     }
 
-    def logPut(r: Row[A])(f: => Try[Unit]): Unit = log(PUT,Row.toBytes(r))(f)
-    def logDelete(key: A)(f: => Try[Unit]): Unit = log(DELETE, Row.toBytes(Row(key)))(f)
+    def logPut(r: SRow)(f: => Try[Unit]): Unit = ???//log(PUT,SRow.toBytes(r))(f)
+    def logDelete(key: A)(f: => Try[Unit]): Unit = ???///log(DELETE, SRow.toBytes(SRow(key)))(f)
     def close = c.close()
   }
   
@@ -107,7 +107,7 @@ object Log {
     
   }
 
-  def apply[A](t: Table[A])(implicit ord: Ordering[A]): WAL[A] = {
+  def apply[A](t: STable[A])(implicit ord: Ordering[A]): WAL[A] = {
     val path = t.path.get + "/wal.log"
     val f = new File(path)
     val c = FileChannel.open(f.toPath, StandardOpenOption.WRITE, StandardOpenOption.CREATE)

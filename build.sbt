@@ -26,7 +26,7 @@ libraryDependencies += "org.mellowtech" % "core" % "3.0.1"
 
 //lucene
 libraryDependencies ++= Seq(
-  "org.apache.lucene" % "lucene-core" % "4.10.3",
-  "org.apache.lucene" % "lucene-analyzers-common" % "4.10.3",
-  "org.apache.lucene" % "lucene-queryparser" % "4.10.3"
+  "org.apache.lucene" % "lucene-core" % "5.3.1",
+  "org.apache.lucene" % "lucene-analyzers-common" % "5.3.1",
+  "org.apache.lucene" % "lucene-queryparser" % "5.3.1"
 )

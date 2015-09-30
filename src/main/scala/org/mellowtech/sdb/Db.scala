@@ -6,18 +6,17 @@ import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
 
-trait Db {
+trait Db extends Closable{
   def name: String
-  def get[K](table: String): Option[Table[K]]
-  def apply[K](table: String): Table[K] = get[K](table)  match{
+  def get[A](table: String): Option[STable[A]]
+  def apply[A](table: String): STable[A] = get[A](table)  match{
     case Some(t) => t
     case None => throw new NoSuchElementException
   }
-  def +=[K](th: TableHeader): Db
+  def +=[A](th: TableHeader): Db
   def -=(table: String): Db
   def flush: Try[Unit]
   def close: Try[Unit]
-  
 }   
 
 class FileDb(val name: String, val path: String) extends Db {
@@ -25,21 +24,21 @@ class FileDb(val name: String, val path: String) extends Db {
   import scala.io.Source
   import TableType._
   
-  var tables: Map[String,Table[_]] = Map()
+  var tables: Map[String,STable[_]] = Map()
   
-  createFiles
+  createFiles()
   
   def createFiles() = {
     val f = new File(path)
     f.mkdirs
-    println(path)
+    //println(path)
   }
   
   private def deleteFiles() = DelDir.d(path)
   
   private def openDb():Try[Unit] = {
     
-    def open(f: File): Table[_] = {
+    def open(f: File): STable[_] = {
         val s = Source.fromFile(f.getAbsolutePath+"/"+Db.TableHeaderFile)
         val th = TableHeader fromJson s.mkString
         Db.openTable(th,f.getAbsolutePath)
@@ -50,31 +49,51 @@ class FileDb(val name: String, val path: String) extends Db {
       f <- new File(path).listFiles; if f.isDirectory()
       t = Try(open(f))
       if t.isSuccess
-    } yield(t.get.name, t.get)
+    } yield(t.get.header.name, t.get)
     
     tables = tlist.toMap
     
     Success()
     
   }
+
+  def flush: Try[Unit] = {
+    val sc = for{
+      t <- tables.values
+      if t.isInstanceOf[Closable]
+    } yield t.asInstanceOf[Closable].flush
+    sc.++(for {
+      t <- tables.values
+    } yield saveHeader(t.header))
+    sc.find(_.isFailure) match {
+      case Some(f) => f
+      case None => Success()
+    }
+  }
+
+  def close:Try[Unit] = Try{
+    val sc = for{
+      t <- tables.values
+      if t.isInstanceOf[Closable]
+    } yield t.asInstanceOf[Closable].close
+    sc.++(for {
+      t <- tables.values
+    } yield saveHeader(t.header))
+    sc.find(_.isFailure) match {
+      case None => Success()
+      case f => f.get
+    }
+  }
   
-  def flush:Try[Unit] = Try(
-      tables.values.foreach(x => {x.flush; saveHeader(x.header)})
-  )
-  
-  def close: Try[Unit] = Try(
-    tables.values.foreach(x => {x.close; saveHeader(x.header)})    
-  )
-  
-  def get[K](table: String): Option[Table[K]] = tables get table match{
+  def get[A](table: String): Option[STable[A]] = tables get table match{
     case None => None
     case Some(t) => t match {
-      case tt: Table[K] => Some(tt)
+      case tt: STable[A] => Some(tt)
       case _ => throw new ClassCastException
     }
   }
   
-  def +=[K](th: TableHeader): Db = tables get th.name match{
+  def +=[A](th: TableHeader): Db = tables get th.name match{
     case Some(t) => this
     case None => {
       val f = new File(path+"/"+th.name)
@@ -87,12 +106,13 @@ class FileDb(val name: String, val path: String) extends Db {
   
   def -=(table: String): Db = tables get table match{
     case None => this
-    case Some(t) => {
+    case Some(t) =>
       tables = tables - table
-      t.close
+      t match {
+        case tt: Closable => tt.close
+      }
       DelDir.d(path + "/" + table)
       this
-    }
   }
   
   private def saveHeader(th: TableHeader): Try[Unit] = Try{
@@ -114,17 +134,17 @@ object Db{
   val system = ActorSystem("dbmsystem")
   def shutdown = system.shutdown
   
-  def openTable(th: TableHeader, p: String): Table[_] = th.keyType match{  
-    case DbType.INT => Table[Int](th, p)
-    case DbType.STRING => Table[String](th, p)
-    case DbType.BYTE => Table[Byte](th, p)
-    case DbType.CHAR => Table[Char](th, p)
-    case DbType.SHORT => Table[Short](th, p)
-    case DbType.LONG => Table[Long](th, p)
-    case DbType.FLOAT => Table[Float](th, p)
-    case DbType.DOUBLE => Table[Double](th, p)
-    case DbType.DATE => Table[Date](th, p)
-    case DbType.BYTES => Table[Iterable[Byte]](th,p)
+  def openTable(th: TableHeader, p: String): STable[_] = th.keyType match{
+    case DbType.INT => STable[Int](th, p)
+    case DbType.STRING => STable[String](th, p)
+    case DbType.BYTE => STable[Byte](th, p)
+    case DbType.CHAR => STable[Char](th, p)
+    case DbType.SHORT => STable[Short](th, p)
+    case DbType.LONG => STable[Long](th, p)
+    case DbType.FLOAT => STable[Float](th, p)
+    case DbType.DOUBLE => STable[Double](th, p)
+    case DbType.DATE => STable[Date](th, p)
+    case DbType.BYTES => STable[Iterable[Byte]](th,p)
   }
   def apply(name: String, path: String): Db = new FileDb(name, path)  
 }

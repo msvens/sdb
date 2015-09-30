@@ -8,11 +8,11 @@ trait Rows extends SuiteMixin { this: Suite =>
   import scala.util.Random
   import scala.collection.mutable.ArrayBuffer
 
-  var sparseRow: Row[String] = null
+  var sparseRow: SRow = null
   val th = TableHeader("table1", DbType.STRING, sorted = false)
   
   abstract override def withFixture(test: NoArgTest) = {
-    sparseRow = new SparseRow("row", Map.empty)
+    sparseRow = new SparseRow(Map.empty)
     try super.withFixture(test) // To be stackable, must call super.withFixture
     finally {
       sparseRow = null
@@ -91,8 +91,8 @@ class RowSpec extends FlatSpec with Rows{
   
   it should "be able to recreate the row" in {
     val r1 = sparseRow + ("col1", 10) + ("col2", "ten")
-    val b = Row.toBytes(r1)
-    val r2 = Row(r1.key,th,b)
+    val b = SRow.toBytes(r1)
+    val r2 = SRow(th,b)
     assert(r1[Int]("col1") === r2[Int]("col1"))
     assert(r1[String]("col2") === r2[String]("col2"))
   }

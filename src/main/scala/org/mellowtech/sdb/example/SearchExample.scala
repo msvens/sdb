@@ -25,19 +25,19 @@ object SearchExample extends App{
   val db = Db("searchxample",dir.getAbsolutePath)
   
   val th = TableHeader("table1")
-  val ch = ColumnHeader.in(th, "col1").copy(search = SearchType.FIELD)
+  val ch = ColumnHeader.in(th, "col1").copy(search = FIELD)
   
   db += th
   
-  val t: Table[String] = db("table1")
-  val st = Table.searchable(t)
+  val t: STable[String] = db("table1")
+  val st = STable.searchable(t)
   
-  st.addCol(ch)
+  st.addColumn(ch)
   
-  st += ("1", ch.name, "HEllo")
-  st += ("2", ch.name, "anna")
-  st += ("3", ch.name, "Hello")
-  st += ("4", ch.name, "pelle")
+  st insert ("1", ch.name, "HEllo")
+  st insert ("2", ch.name, "anna")
+  st insert ("3", ch.name, "Hello")
+  st insert ("4", ch.name, "pelle")
   
   //st.refresh
   
@@ -50,7 +50,7 @@ object SearchExample extends App{
   
   println("result: "+res.size+" "+res.mkString(" "))
   
-  st += ("5", ch.name, "Hello")
+  st insert ("5", ch.name, "Hello")
   scala.io.StdIn.readLine
   
   res = st.queryKeys("col1", "Hello", Seq.empty)
@@ -62,7 +62,7 @@ object SearchExample extends App{
     case Failure(e) => println(e)
   }
   
-  db -= t.name
+  db -= t.header.name
   db.close
   Db.shutdown
 
