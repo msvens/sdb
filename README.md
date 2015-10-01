@@ -71,7 +71,7 @@ All mellowtech.org APIs can be downloaded from our maven repository <http://www.
 
 ```scala
 resolvers += "mellowtech" at "http://www.mellowtech.org/nexus/content/groups/public"
-libraryDependencies += "org.mellowtech" %% "sdb" % "0.1-SNAPSHOT"
+libraryDependencies += "org.mellowtech" %% "sdb" % "0.2-SNAPSHOT"
 ```
 
 ##Quick Start

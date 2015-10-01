@@ -2,7 +2,7 @@ package org.mellowtech.sdb.example
 
 import java.io.File
 import org.mellowtech.sdb._
-import org.mellowtech.sdb.model.{MappedTable,RowMapper}
+import org.mellowtech.sdb.model.{MappedTable,AutoMappedTable}
 import org.mellowtech.sdb.model.simple._
 //import org.mellowtech.sdb.model.simple._
 

@@ -17,19 +17,11 @@ object MappingExample extends App{
 
   val person = Person("john", 24)
   val pMap: Map[String,Any] = person
-  assert {
-    pMap == Map("name" -> "john", "age" -> 24)
-  }
+  assert(pMap == Map("name" -> "john", "age" -> 24))
+  
 
   val map = Map("name" -> "bob", "age" -> 22)
   val p: Person = materialize[Person](map)
-  //
-  assert {
-    materialize[Person](map) == Person("bob", 22)
-    //map == pMap
-    //mapP == Person("bob", 22)
-  }
-  
-  
+  assert(materialize[Person](map) == Person("bob", 22))
 
 }

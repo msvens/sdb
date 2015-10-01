@@ -38,148 +38,114 @@ object simple {
   
   case class SimpleColumn[A](h: ColumnHeader)
 
-  abstract class AutoMappedTable[A: Ordering, R: Mappable](name: String, val keyName: String)(implicit db: Db, ct: ClassTag[A]) extends
-    MappedTable[A,R](name) with RowMapper[A,R]{
-    
-    def this(name: String)(implicit db: Db, ct: ClassTag[A]) = this(name, "id")
-    
-    override val * = this
-    
-    override def list(b: R): (Option[A], List[(ColumnName, Any)]) = {
-      val m = mapify(b)
-      val id: Option[A] = anyToOption(m(keyName))
-      val kvs = (m - keyName).foldLeft[List[(String,Any)]](List()){(l,kv) => kv._2 match {
-        case Some(b) => (kv._1,b) :: l
-        case None => l
-        case a if a != null => (kv._1,a) :: l
-        case _ => l
-      }}
-      (id, kvs)
-    }
-    
-    override def from(a: KeyRow[A]): R = {
-      val idp = (keyName,thead.genKey match {
-        case true => Some(a._1)
-        case false => a._1
-      })
-      val t = addOption(a._2.iterator.toMap) + idp
-      materialize[R](t.withDefaultValue(None))
-    }
-    
-    private def addOption(m: Map[String,Any]): Map[String,Any] = m.foldLeft(Map[String,Any]())((b,kv) => {
-      if(table.columnHeader(kv._1).get.nullable)
-         b + ((kv._1,Some(kv._2)))
-       else
-         b + kv
-      })
-  }
-  
-  
-  
-  abstract class SimpleTable[A: Ordering,R: Mappable](val name: String)(implicit val db: Db, ct: ClassTag[A]) {
-    
-    //import Mappable._
-    //import scala.util
-    
-    val ktype = dbType[A]
-    var thead = TableHeader(name, ktype)
-    var searchable = false
-    
-    def O = new AnyRef with COptions
 
-    def primaryColumn[B: ClassTag](name: String, options: COption[B]*) = {
-      column(name, (COption.Primary +: options):_*)
-    }
-    
-    def column[B : ClassTag](name: String, options: COption[B]*): SimpleColumn[B] = {
-      val vtype = dbType[B]
-      val oset = options.toSet
-      val h = oset.foldLeft(ColumnHeader(name, this.name, ktype, vtype))((a,b) => {
-        b match {
-          case COption.Sorted => a.copy(sorted = true)
-          case COption.Primary => {thead = thead.copy(primColumn = Some(name)); a}
-          case COption.Length(x,y) => a.copy(maxValueSize = Some(x))
-          case COption.FieldSearch => {searchable = true; ;a.copy(search = SearchType.FIELD)}
-          case COption.TextSearch => {searchable = true; a.copy(search = SearchType.TEXT)}
-          case COption.Optional => a.copy(nullable = true)
-          case COption.Forced => a.copy(nullable = false)
-          case _ => a
-        }
-      })
-      if(oset(COption.Primary) && oset(COption.Optional)){
-        thead = thead.copy(genKey = true)
-      }
-      SimpleColumn(h)
-    }
-    
-    
-    def * : Seq[SimpleColumn[_]]
-    
-    def headers: Seq[ColumnHeader] = *
-    
-    def idc: SimpleColumn[A]
-    
-    lazy val table: STable[A] = {
-      val t = db.get[A](name) match {
-        case Some(t) => t
-        case None => {
-          db.+=[A](thead)
-          val t = db[A](name)
-          for(c <- headers) t.addColumn(c)
-          t
-        }
-      }
-      if(searchable) STable.searchable(t) else t
-    }
-    
-    private def conv(r: KeyRow[A]): R = {
-      val p: (String,Any) = cTt((idc.h, r._1))
-      val t = addOption(r._2.iterator.toMap) + p
-      materialize[R](t.withDefaultValue(None))
-    }
-    
-    def get(id: A): Option[R] = table row id match {
-      case None => None
-      case Some(r) => {
-        val p: (String,Any) = cTt((idc.h, id))
-        val t = addOption(r.iterator.toMap) + p
-        Some(materialize[R](t.withDefaultValue(None))) 
-      } 
-    }
-    
-    def find[B](cn: ColumnName, v: B): Iterator[R] = for(r <- table.find(cn, v)) yield(conv(r))
-    
-    def ins(r: R): Unit = {
-      val m = noOption(mapify(r))
-      //println(m)
-      //val k: A = noOp(m(idc.h.name)).asInstanceOf[A]
-      val k: Option[A] = noOp(m(idc.h.name))
-      val row = SRow(m - idc.h.name)
-      //println(row)
-      table + ((k,row))
-    }
-    
-    private def noOp[A](a: Any): Option[A] = a match {
-      case Some(b) => Some(b.asInstanceOf[A])
-      case None => None
-      case _ => Some(a.asInstanceOf[A])
-    }
-    
-    
-    
-    private def noOption(m: Map[String,Any]): Map[String,Any] = m.foldLeft(Map[String,Any]())((b,kv) => kv._2 match {
-      case Some(vv) => m + ((kv._1, vv))
-      case None => m - kv._1
-      case _ => m + kv
-    })
-    
-    private def addOption(m: Map[String,Any]): Map[String,Any] = m.foldLeft(Map[String,Any]())((b,kv) => {
-       if(table.columnHeader(kv._1).get.nullable)
-         b + ((kv._1,Some(kv._2)))
-       else
-         b + kv
-      })
-    
-  }
+  
+  
+  
+//  abstract class SimpleTable[A: Ordering,R: Mappable](val name: String)(implicit val db: Db, ct: ClassTag[A]) {
+//    
+//    //import Mappable._
+//    //import scala.util
+//    
+//    val ktype = dbType[A]
+//    var thead = TableHeader(name, ktype)
+//    var searchable = false
+//    
+//    def O = new AnyRef with COptions
+//
+//    def primaryColumn[B: ClassTag](name: String, options: COption[B]*) = {
+//      column(name, (COption.Primary +: options):_*)
+//    }
+//    
+//    def column[B : ClassTag](name: String, options: COption[B]*): SimpleColumn[B] = {
+//      val vtype = dbType[B]
+//      val oset = options.toSet
+//      val h = oset.foldLeft(ColumnHeader(name, this.name, ktype, vtype))((a,b) => {
+//        b match {
+//          case COption.Sorted => a.copy(sorted = true)
+//          case COption.Primary => {thead = thead.copy(primColumn = Some(name)); a}
+//          case COption.Length(x,y) => a.copy(maxValueSize = Some(x))
+//          case COption.FieldSearch => {searchable = true; ;a.copy(search = SearchType.FIELD)}
+//          case COption.TextSearch => {searchable = true; a.copy(search = SearchType.TEXT)}
+//          case COption.Optional => a.copy(nullable = true)
+//          case COption.Forced => a.copy(nullable = false)
+//          case _ => a
+//        }
+//      })
+//      if(oset(COption.Primary) && oset(COption.Optional)){
+//        thead = thead.copy(genKey = true)
+//      }
+//      SimpleColumn(h)
+//    }
+//    
+//    
+//    def * : Seq[SimpleColumn[_]]
+//    
+//    def headers: Seq[ColumnHeader] = *
+//    
+//    def idc: SimpleColumn[A]
+//    
+//    lazy val table: STable[A] = {
+//      val t = db.get[A](name) match {
+//        case Some(t) => t
+//        case None => {
+//          db.+=[A](thead)
+//          val t = db[A](name)
+//          for(c <- headers) t.addColumn(c)
+//          t
+//        }
+//      }
+//      if(searchable) STable.searchable(t) else t
+//    }
+//    
+//    private def conv(r: KeyRow[A]): R = {
+//      val p: (String,Any) = cTt((idc.h, r._1))
+//      val t = addOption(r._2.iterator.toMap) + p
+//      materialize[R](t.withDefaultValue(None))
+//    }
+//    
+//    def get(id: A): Option[R] = table row id match {
+//      case None => None
+//      case Some(r) => {
+//        val p: (String,Any) = cTt((idc.h, id))
+//        val t = addOption(r.iterator.toMap) + p
+//        Some(materialize[R](t.withDefaultValue(None))) 
+//      } 
+//    }
+//    
+//    def find[B](cn: ColumnName, v: B): Iterator[R] = for(r <- table.find(cn, v)) yield(conv(r))
+//    
+//    def ins(r: R): Unit = {
+//      val m = noOption(mapify(r))
+//      //println(m)
+//      //val k: A = noOp(m(idc.h.name)).asInstanceOf[A]
+//      val k: Option[A] = noOp(m(idc.h.name))
+//      val row = SRow(m - idc.h.name)
+//      //println(row)
+//      table + ((k,row))
+//    }
+//    
+//    private def noOp[A](a: Any): Option[A] = a match {
+//      case Some(b) => Some(b.asInstanceOf[A])
+//      case None => None
+//      case _ => Some(a.asInstanceOf[A])
+//    }
+//    
+//    
+//    
+//    private def noOption(m: Map[String,Any]): Map[String,Any] = m.foldLeft(Map[String,Any]())((b,kv) => kv._2 match {
+//      case Some(vv) => m + ((kv._1, vv))
+//      case None => m - kv._1
+//      case _ => m + kv
+//    })
+//    
+//    private def addOption(m: Map[String,Any]): Map[String,Any] = m.foldLeft(Map[String,Any]())((b,kv) => {
+//       if(table.columnHeader(kv._1).get.nullable)
+//         b + ((kv._1,Some(kv._2)))
+//       else
+//         b + kv
+//      })
+//    
+//  }
   
 }
