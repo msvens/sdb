@@ -3,6 +3,49 @@ package org.mellowtech.sdb.model
 import org.mellowtech.sdb.SRow
 import scala.reflect.ClassTag
 import org.mellowtech.sdb.{Db,KeyRow,OptKeyRow, ColumnName}
+import org.mellowtech.sdb.TableType._
+
+abstract class COption[+A]
+abstract class TOption[+A]
+
+object COption {
+  case object Optional extends COption[Nothing]
+  case object Forced extends COption[Nothing]
+  case object AutoInc extends COption[Nothing]
+  case object Sorted extends COption[Nothing]
+  case object Primary extends COption[Nothing]
+  case object FieldSearch extends COption[Nothing]
+  case object TextSearch extends COption[Nothing]
+  case class Length(length: Int, varying: Boolean = true) extends COption[Nothing]
+}
+
+trait COptions {
+  def Optional = COption.Optional
+  def Sorted = COption.Sorted
+  def Primary = COption.Primary
+  def NotNull = COption.Forced
+  def Length = COption.Length
+  def FieldSearch = COption.FieldSearch
+  def TextSearch = COption.TextSearch
+}
+
+object TOption {
+  case object AutoInc extends TOption[Nothing]
+  case object Sorted extends TOption[Nothing]
+  case object Hashed extends TOption[Nothing]
+  case class Type(t: TableType) extends TOption[Nothing]
+  case object Logged extends TOption[Nothing]
+  case object Indexed extends TOption[Nothing]
+}
+
+trait TOptions {
+  def AutoInc = TOption.AutoInc
+  def Sorted = TOption.Sorted
+  def Hashed = TOption.Hashed
+  def Type = TOption.Type
+  def Logged = TOption.Logged
+  def Indexed = TOption.Indexed
+}
 
 trait RowMapper[A, B] {
   
@@ -29,7 +72,7 @@ abstract class MappedTable[A: Ordering, R](val name: String)(implicit val db: Db
   import org.mellowtech.sdb._
 
   val ktype = dbType[A]
-  var thead = TableHeader(name, ktype)
+  //var thead = TableHeader(name, ktype)
   var searchable = false
 
   def primaryColumn[B: ClassTag](name: String, options: COption[B]*) = {
@@ -37,8 +80,24 @@ abstract class MappedTable[A: Ordering, R](val name: String)(implicit val db: Db
   }
   
   def O = new AnyRef with COptions
+  
+  def T = new AnyRef with TOptions
+  
+  def tableProperties: List[TOption[A]] = List(T.Sorted, T.Type(TableType.ROW))
+  
+  var thead = tableProperties.foldLeft(TableHeader(name,ktype))((th, p) => p match {
+    case TOption.Sorted => th.copy(sorted = true)
+    case TOption.Hashed => th.copy(sorted = false)
+    case TOption.AutoInc => th.copy(genKey = true)
+    case TOption.Logged => th.copy(logging = true)
+    case TOption.Type(t) => th.copy(tableType = t)
+    case TOption.Indexed => th.copy(indexed = true)
+    case _ => th
+  })
+  
+  private var _headers: List[ColumnHeader] = Nil
 
-  def column[B: ClassTag](name: String, options: COption[B]*): ColumnHeader = {
+  def column[B: ClassTag](name: String, options: COption[B]*): Unit = {
     val vtype = dbType[B]
     val oset = options.toSet
     val h = oset.foldLeft(ColumnHeader(name, this.name, ktype, vtype))((a, b) => {
@@ -48,19 +107,20 @@ abstract class MappedTable[A: Ordering, R](val name: String)(implicit val db: Db
         case COption.Length(x, y) => a.copy(maxValueSize = Some(x))
         case COption.FieldSearch  => { searchable = true; ; a.copy(search = SearchType.FIELD) }
         case COption.TextSearch   => { searchable = true; a.copy(search = SearchType.TEXT) }
-        case COption.Nullable     => a.copy(nullable = true)
-        case COption.NotNull      => a.copy(nullable = false)
+        case COption.Optional     => a.copy(nullable = true)
+        case COption.Forced      => a.copy(nullable = false)
         case _                    => a
       }
     })
     
-    if (oset(COption.Primary) && oset(COption.Nullable)) thead = thead.copy(genKey = true)
-    if(searchable && !thead.indexed) thead = thead.copy(indexed = true)
+    if (oset(COption.Primary) && oset(COption.Optional))
+      throw new Error("primary column cannot be optional")
     
-    h
+    if(searchable && !thead.indexed) thead = thead.copy(indexed = true)
+    _headers = h :: _headers
   }
 
-  def headers: Seq[ColumnHeader]
+  final def headers = _headers
 
   def * : RowMapper[A, R]
 

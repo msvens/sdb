@@ -31,7 +31,7 @@ object SimpleExample extends App{
   case class MyRow(id: Option[Int], c2: Option[String])
   
   class TestSimple extends SimpleTable[Int,MyRow]("testTable") {
-    val idc = column[Int]("id", O.Nullable, O.Primary)
+    val idc = column[Int]("id", O.Optional, O.Primary)
     val c2 = column[String]("c2", O.Length(128,true), O.FieldSearch)
     val * = List(c2)
   }

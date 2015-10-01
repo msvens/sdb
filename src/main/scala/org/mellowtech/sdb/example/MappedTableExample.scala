@@ -26,8 +26,6 @@ object MappedTableExample extends App{
 
     val c2 = column[String]("c2", O.Length(128,true))
     
-    override val headers: Seq[ColumnHeader] = List(c2)
-    
     
     
   }
