@@ -34,9 +34,9 @@ object SearchExample extends App{
   
   st.addColumn(ch)
   
-  st insert ("1", ch.name, "HEllo")
+  st insert ("1", ch.name, "helLo")
   st insert ("2", ch.name, "anna")
-  st insert ("3", ch.name, "Hello")
+  st insert ("3", ch.name, "hello")
   st insert ("4", ch.name, "pelle")
   
   //st.refresh
@@ -46,16 +46,16 @@ object SearchExample extends App{
   println("continue")
   scala.io.StdIn.readLine
   
-  var res = st.queryKeys("col1", "Hello", Seq.empty)
+  var res = st.queryKeys("col1", "hello", Seq.empty)
   
-  println("result: "+res.size+" "+res.mkString(" "))
+  println("result: "+res.mkString(" "))
   
-  st insert ("5", ch.name, "Hello")
+  st insert ("5", ch.name, "hello")
   scala.io.StdIn.readLine
   
-  res = st.queryKeys("col1", "Hello", Seq.empty)
+  res = st.queryKeys("col1", "hello", Seq.empty)
   
-  println("result: "+res.size+" "+res.mkString(" "))
+  println("result: "+res.mkString(" "))
   
   st.close match {
     case Success(s) => println("flushed table successfully")

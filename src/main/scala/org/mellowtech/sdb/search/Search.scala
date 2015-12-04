@@ -65,8 +65,8 @@ case class DbDocument[A](keyRow: KeyRow[A], doc: Document = new Document)(implic
   keyRow._2.iterator foreach (kv => {
       t.columnHeader(kv._1) match {
         case Some(c) => c.search match {
-          case SearchType.FIELD => doc add Converter.toField(kv._1, kv._2, false, false)
-          case SearchType.TEXT => doc add Converter.toField(kv._1, kv._2, false, true)
+          case SearchType.FIELD => doc add Converter.toField(kv._1, kv._2, false, true)
+          case SearchType.TEXT => doc add Converter.toField(kv._1, kv._2, false, false)
           case SearchType.NONE =>
         }
         case None =>

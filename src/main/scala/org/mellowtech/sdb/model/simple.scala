@@ -9,7 +9,7 @@ object simple {
   import org.mellowtech.sdb.DbType._
   import scala.reflect.ClassTag
   
-  def mapify[T: Mappable](t: T) = implicitly[Mappable[T]].toMap(t)
+  /*def mapify[T: Mappable](t: T) = implicitly[Mappable[T]].toMap(t)
   def materialize[T: Mappable](map: Map[String, Any]) = implicitly[Mappable[T]].fromMap(map)
   
   def anyToOption[A](a: Any): Option[A] = a match {
@@ -36,7 +36,7 @@ object simple {
     case false => (t._1.name, t._2)
   }
   
-  case class SimpleColumn[A](h: ColumnHeader)
+  case class SimpleColumn[A](h: ColumnHeader)*/
 
 
   

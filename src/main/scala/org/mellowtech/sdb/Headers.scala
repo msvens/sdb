@@ -65,4 +65,5 @@ object ColumnHeader {
     apply(name,th.name, th.keyType, valueType, sorted = th.sorted, maxKeySize = th.maxKeySize)
   }
 
+
 }

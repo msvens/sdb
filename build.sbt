@@ -22,7 +22,7 @@ libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "1.4.0"
 
 libraryDependencies += "junit" % "junit" % "4.11" % "test"
 
-libraryDependencies += "org.mellowtech" % "core" % "3.0.1"
+libraryDependencies += "org.mellowtech" % "core" % "3.0.3"
 
 //lucene
 libraryDependencies ++= Seq(

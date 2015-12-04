@@ -3,6 +3,7 @@ package org.mellowtech.sdb
 import java.util.Date
 
 import org.mellowtech.core.bytestorable._
+import org.mellowtech.core.collections.DiscMap
 
 import scala.collection.{Map,SortedMap}
 import scala.collection.immutable.TreeMap
@@ -66,9 +67,10 @@ object SColumn {
     header.copy(maxKeySize = Some(kSize), maxValueSize = Some(vSize))
   }
 
-  def apply[A, C](header: ColumnHeader, path: String)(implicit ord: Ordering[A]): SColumn[A, C] = {
+  def apply[A, B](header: ColumnHeader, path: String)(implicit ord: Ordering[A]): SColumn[A, B] = {
     import DbType._
-    val m = (header.keyType, header.valueType) match {
+    val m: DiscColumn[_,_] = new DiscColumn(header, path)
+    /*val m = (header.keyType, header.valueType) match {
       case (STRING, STRING) => new DiscColumn[String, CBString, String, CBString](header, path, classOf[CBString], classOf[CBString])
       case (STRING, CHAR) => new DiscColumn[String, CBString, Character, CBChar](header, path, classOf[CBString], classOf[CBChar])
       case (STRING, BYTE) => new DiscColumn[String, CBString, java.lang.Byte, CBByte](header, path, classOf[CBString], classOf[CBByte])
@@ -104,8 +106,8 @@ object SColumn {
       case (LONG, BYTES) => new DiscColumn[java.lang.Long, CBLong, Array[Byte], CBByteArray](header, path, classOf[CBLong], classOf[CBByteArray])
 
       case _ => throw new Error("unknown column type " + header.keyType + " " + header.valueType)
-    }
-    m.asInstanceOf[SColumn[A, C]]
+    }*/
+    m.asInstanceOf[SColumn[A, B]]
   }
 
   /*def apply[A, B <: BComparable[A,B],C, D <: BComparable[C,D]](header: ColumnHeader, path: String)(implicit ord: Ordering[A]): Column[A,C] = {

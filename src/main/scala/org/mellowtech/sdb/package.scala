@@ -55,6 +55,30 @@ package object sdb {
   object DbType extends Enumeration {
     type DbType = Value
     val BYTE, BOOLEAN, SHORT, CHAR, INT, LONG, FLOAT, DOUBLE, STRING, DATE, BYTES = Value
+    def asJavaClass(dbType: DbType): Class[_] = dbType match {
+      case BYTE => classOf[java.lang.Byte]
+      case BOOLEAN => classOf[java.lang.Boolean]
+      case SHORT => classOf[java.lang.Short]
+      case INT => classOf[java.lang.Integer]
+      case LONG => classOf[java.lang.Long]
+      case FLOAT => classOf[java.lang.Float]
+      case DOUBLE => classOf[java.lang.Double]
+      case STRING => classOf[String]
+      case DATE => classOf[java.util.Date]
+      case BYTES => classOf[Array[Byte]]
+    }
+    def asScalaClass(dbType: DbType): Class[_] = dbType match {
+      case BYTE => classOf[Byte]
+      case BOOLEAN => classOf[Boolean]
+      case SHORT => classOf[Short]
+      case INT => classOf[Int]
+      case LONG => classOf[Long]
+      case FLOAT => classOf[Float]
+      case DOUBLE => classOf[Double]
+      case STRING => classOf[String]
+      case DATE => classOf[Date]
+      case BYTES => classOf[Array[Byte]]
+    }
   }
 
   object TableType extends Enumeration {
