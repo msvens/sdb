@@ -5,9 +5,17 @@ scalaVersion := "2.11.7"
 version := "0.2-SNAPSHOT"
 organization := "org.mellowtech"
 
-resolvers ++= Seq(
-  "Mellowtech Snapshots" at "http://www.mellowtech.org/nexus/content/groups/public"
-)
+publishMavenStyle := true
+publishArtifact in Test := false
+pomIncludeRepository := { _ => false }
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test"
 
@@ -21,7 +29,6 @@ libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "1.4.0"
 
 
 libraryDependencies += "junit" % "junit" % "4.11" % "test"
-
 libraryDependencies += "org.mellowtech" % "core" % "3.0.3"
 
 //lucene
