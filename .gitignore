@@ -5,13 +5,13 @@ target
 macro/target
 macro/.cache
 macro/.project
-macro/.classpath
+macro/.classpaths
 tmp
 .history
 dist
 /bin
 /.idea
-/*.iml
+**/*.iml
 /out
 /.idea_modules
 /.classpath

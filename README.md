@@ -67,10 +67,10 @@ From [slick](http://slick.typesafe.com) we have borrowed the possibility of defi
 using a combination of case classes and an abstract table class where you define column properties
 
 ###Download
-All mellowtech.org APIs can be downloaded from our maven repository <http://www.mellowtech.org/nexus/content/groups/public/>
+All mellowtech.org APIs can be downloaded from our maven central or sonatype snapshots
 
 ```scala
-resolvers += "mellowtech" at "http://www.mellowtech.org/nexus/content/groups/public"
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 libraryDependencies += "org.mellowtech" %% "sdb" % "0.2-SNAPSHOT"
 ```
 
