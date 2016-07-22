@@ -18,7 +18,8 @@ object Dependencies {
 
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.9"
   val nscalaTime = "com.github.nscala-time" %% "nscala-time" % "1.4.0"
-  val mcore = "org.mellowtech" % "core" % "3.0.3"
+  //val guava = "com.google.guava" % "guava" % "18.0"
+  val mcore = "org.mellowtech" % "core" % "3.0.4-SNAPSHOT"
 
   val luceneCore = "org.apache.lucene" % "lucene-core" % luceneVersion
   val luceneAnalyzers = "org.apache.lucene" % "lucene-analyzers-common" % luceneVersion

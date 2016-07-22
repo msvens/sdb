@@ -52,7 +52,8 @@ lazy val examples = (project in file ("examples")).dependsOn(core).
   settings(buildSettings: _*).
   settings(
     name:= "sdb-examples",
-    libraryDependencies ++= commonDeps
+    libraryDependencies ++= commonDeps//,
+    //libraryDependencies += guava
   )
 
 lazy val root = (project in file (".")).aggregate(macroSub, core).
