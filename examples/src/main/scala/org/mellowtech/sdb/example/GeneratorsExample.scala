@@ -24,7 +24,7 @@ object GeneratorsExample extends App{
   sWatch.stop
   Console.println("millis string: "+(numItems / sWatch.elapsed(TimeUnit.MILLISECONDS)))
 
-  var cGen: Iterator[Array[Char]] = Generators[Array[Char]](mutable = true)
+  var cGen: Iterator[Array[Char]] = Generators[Array[Char]](true)
 
   sWatch.reset()
   sWatch.start()
@@ -37,7 +37,7 @@ object GeneratorsExample extends App{
   Console.println("millis mutable char array: "+(numItems / sWatch.elapsed(TimeUnit.MILLISECONDS)))
 
 
-  cGen = Generators[Array[Char]](mutable = false)
+  cGen = Generators[Array[Char]](false)
   curr = 0;
   sWatch.reset()
   sWatch.start()
@@ -48,7 +48,7 @@ object GeneratorsExample extends App{
   sWatch.stop
   Console.println("millis imutable char array: "+(numItems / sWatch.elapsed(TimeUnit.MILLISECONDS)))
 
-  var bGen: Iterator[Array[Byte]] = Generators[Array[Byte]](mutable = true)
+  var bGen: Iterator[Array[Byte]] = Generators[Array[Byte]](true)
   curr = 0;
   sWatch.reset()
   sWatch.start()
@@ -60,7 +60,7 @@ object GeneratorsExample extends App{
   Console.println("millis mutable byte array: "+(numItems / sWatch.elapsed(TimeUnit.MILLISECONDS)))
 
 
-  bGen = Generators[Array[Byte]](mutable = false)
+  bGen = Generators[Array[Byte]](false)
   curr = 0
   sWatch.reset()
   sWatch.start()

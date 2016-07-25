@@ -23,12 +23,12 @@ class MapColumn[A,B](var m: Map[A,B], val header: ColumnHeader)(implicit val ord
 
 class DiscColumn[A,B](val header: ColumnHeader, path: String) extends SColumn[A,B] with Closable{
   import scala.collection.JavaConverters._
-  val valueBlockSize = DiscBasedMap.DEFAULT_VALUE_BLOCK
-  val keyBlockSize = DiscBasedMap.DEFAULT_KEY_BLOCK
+  val valueBlockSize = DiscMapBuilder.DEFAULT_VALUE_BLOCK_SIZE
+  //val keyBlockSize = Dis.DEFAULT_KEY_BLOCK
   lazy val isBlob: Boolean = SColumn.calcSize(header).maxValueSize.get > valueBlockSize / 10
 
   val builder = SDiscMapBuilder()
-  builder.blobValues(isBlob).memMappedKeyBlocks(true)
+  builder.blobValues(isBlob)
   val dbmap = builder.build[A,B](header.keyType, header.valueType, path, header.sorted)
 
   //val dbmap = new DiscMapBuilder().blobValues(isBlob).memMappedKeyBlocks(true).build(kType, vType,path, header.sorted)
