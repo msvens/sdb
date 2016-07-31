@@ -341,7 +341,8 @@ class SInt(val get: Int = 0) extends BComparable[Int, SInt] {
 
   override def toString: String = "" + get
 
-  override def byteCompare(offset1: Int, bb1: ByteBuffer, offset2: Int, bb2: ByteBuffer): Int = bb1.getInt(offset1) - bb2.getInt(offset2)
+  override def byteCompare(offset1: Int, bb1: ByteBuffer, offset2: Int, bb2: ByteBuffer): Int =
+    bb1.getInt(offset1).compareTo(bb2.getInt(offset2))
 }
 
 class SLong(val get: Long = 0) extends BComparable[Long, SLong] {
